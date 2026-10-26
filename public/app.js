@@ -6,11 +6,13 @@ const API = '/tasks';
 
 let tasks = [];   // latest copy of the tasks from the server
 
-// ---------- Elements (found by their id in index.html) ----------
-const taskList = document.getElementById('taskList');
-const emptyMsg = document.getElementById('emptyMsg');
-const statusEl = document.getElementById('status');
-const toastEl  = document.getElementById('toast');
+// ---------- Elements ----------
+const taskList   = document.getElementById('taskList');
+const emptyMsg   = document.getElementById('emptyMsg');
+const statusEl   = document.getElementById('status');
+const toastEl    = document.getElementById('toast');
+const addForm    = document.getElementById('addForm');     // NEW
+const titleInput = document.getElementById('titleInput');  // NEW
 
 // ---------- Helper: one place for every API call ----------
 async function request(url, options = {}) {
@@ -19,7 +21,6 @@ async function request(url, options = {}) {
     ...options,
   });
 
-  // 204 No Content (DELETE) has no body to read
   if (res.status === 204) return null;
 
   const data = await res.json().catch(() => ({}));
@@ -29,10 +30,10 @@ async function request(url, options = {}) {
   return data;
 }
 
-// ---------- Load tasks (GET /tasks) ----------
+// ---------- CRUD functions ----------
 async function loadTasks() {
   try {
-    tasks = await request(API);
+    tasks = await request(API);                         // GET /tasks
     setStatus(true);
     render();
   } catch (err) {
@@ -41,43 +42,95 @@ async function loadTasks() {
   }
 }
 
-// ---------- Draw the list ----------
+// NEW: create a task
+async function addTask(title) {
+  const task = await request(API, {                     // POST /tasks
+    method: 'POST',
+    body: JSON.stringify({ title }),
+  });
+  tasks.unshift(task);          // add to the START of the list (newest first)
+  render();
+  showToast('Task added');
+}
+
+// NEW: tick / untick
+async function toggleTask(id, completed) {
+  const updated = await request(`${API}/${id}`, {       // PATCH /tasks/:id
+    method: 'PATCH',
+    body: JSON.stringify({ completed }),
+  });
+  replaceTask(updated);
+}
+
+// NEW: delete
+async function deleteTask(id) {
+  await request(`${API}/${id}`, { method: 'DELETE' });  // DELETE /tasks/:id
+  tasks = tasks.filter(t => t.id !== id);
+  render();
+  showToast('Task deleted');
+}
+
+// NEW: swap one task in the array for its updated version
+function replaceTask(updated) {
+  tasks = tasks.map(t => (t.id === updated.id ? updated : t));
+  render();
+}
+
+// ---------- Rendering ----------
 function render() {
-  taskList.innerHTML = '';                 // clear the old list
+  taskList.innerHTML = '';
   tasks.forEach(t => taskList.appendChild(createTaskItem(t)));
   emptyMsg.hidden = tasks.length > 0;
 
-  // MySQL returns completed as 0 or 1
   const doneCount = tasks.filter(t => t.completed).length;
   document.getElementById('countAll').textContent  = tasks.length;
   document.getElementById('countDone').textContent = doneCount;
   document.getElementById('countOpen').textContent = tasks.length - doneCount;
 }
 
-// Build one <li> for one task
 function createTaskItem(task) {
-  const done = Boolean(task.completed);    // 1 → true, 0 → false
+  const done = Boolean(task.completed);
 
   const li = document.createElement('li');
   li.className = 'task' + (done ? ' is-done' : '');
 
+  // Checkbox → PATCH
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.checked = done;
+  checkbox.title = 'Mark as done';
+  checkbox.addEventListener('change', () =>                           // NEW
+    toggleTask(task.id, checkbox.checked).catch(err => {
+      checkbox.checked = !checkbox.checked;   // undo the tick if the API failed
+      showToast(err.message, true);
+    })
+  );
 
   const body = document.createElement('div');
   body.className = 'task-body';
-
   const title = document.createElement('p');
   title.className = 'task-title';
-  title.textContent = task.title;          // textContent = safe, shows as plain text
-
+  title.textContent = task.title;
   const meta = document.createElement('p');
   meta.className = 'task-meta';
   meta.textContent = `#${task.id} · created ${formatDate(task.created_at)}`;
-
   body.append(title, meta);
-  li.append(checkbox, body);
+
+  // NEW: action buttons
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'icon-btn delete';
+  delBtn.innerHTML = '✕ <span class="label">Delete</span>';   // our own fixed text, so innerHTML is safe here
+  delBtn.addEventListener('click', () => {
+    if (confirm(`Delete "${task.title}"?`)) {
+      deleteTask(task.id).catch(err => showToast(err.message, true));
+    }
+  });
+
+  actions.append(delBtn);
+  li.append(checkbox, body, actions);
   return li;
 }
 
@@ -102,6 +155,26 @@ function showToast(message, isError = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (toastEl.hidden = true), 2500);
 }
+
+// ---------- Events ----------
+// NEW: the Add form
+addForm.addEventListener('submit', async e => {
+  e.preventDefault();                    // stop the browser reloading the page
+  const title = titleInput.value.trim();
+  if (!title) return;
+
+  const button = addForm.querySelector('button');
+  button.disabled = true;                // stop double-clicks creating 2 tasks
+  try {
+    await addTask(title);
+    titleInput.value = '';
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    button.disabled = false;
+    titleInput.focus();
+  }
+});
 
 // ---------- Start ----------
 loadTasks();
