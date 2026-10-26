@@ -38,6 +38,47 @@ app.post('/tasks', (req, res) => {
   tasks.push(newTask);
   res.status(201).json(newTask);
 });
+// GET /tasks/:id — return one task
+app.get('/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const task = tasks.find(t => t.id === id);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  res.json(task);
+});
+
+// PATCH /tasks/:id — update part of a task
+app.patch('/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const task = tasks.find(t => t.id === id);
+
+  if (!task) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  const { title, completed } = req.body;
+
+  if (title !== undefined) task.title = title.trim();
+  if (completed !== undefined) task.completed = completed;
+
+  res.json(task);
+});
+
+// DELETE /tasks/:id — remove a task
+app.delete('/tasks/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const index = tasks.findIndex(t => t.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
+  tasks.splice(index, 1);
+  res.status(204).send();
+});
 // Start listening for requests
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
