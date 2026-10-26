@@ -63,15 +63,67 @@ app.post('/tasks', async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 });
-
-// PATCH /tasks/:id — mark complete / not complete
-app.patch('/tasks/:id', async (req, res) => {
+// PUT /tasks/:id — replace the whole task (title AND completed required)
+app.put('/tasks/:id', async (req, res) => {
   try {
-    const { completed } = req.body;
+    const { title, completed } = req.body;
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+    if (typeof completed !== 'boolean') {
+      return res.status(400).json({ error: 'completed must be true or false' });
+    }
 
     const [result] = await pool.query(
-      'UPDATE tasks SET completed = ? WHERE id = ?',
-      [completed, req.params.id]
+      'UPDATE tasks SET title = ?, completed = ? WHERE id = ?',
+      [title.trim(), completed, req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+// PATCH /tasks/:id — mark complete / not complete
+// PATCH /tasks/:id — update only the fields that were sent
+app.patch('/tasks/:id', async (req, res) => {
+  try {
+    const { title, completed } = req.body;
+
+    if (title === undefined && completed === undefined) {
+      return res.status(400).json({ error: 'Provide title or completed to update' });
+    }
+    if (title !== undefined && title.trim() === '') {
+      return res.status(400).json({ error: 'Title cannot be empty' });
+    }
+    if (completed !== undefined && typeof completed !== 'boolean') {
+      return res.status(400).json({ error: 'completed must be true or false' });
+    }
+
+    // Build the SQL from only the fields that were sent
+    const updates = [];
+    const values = [];
+
+    if (title !== undefined) {
+      updates.push('title = ?');
+      values.push(title.trim());
+    }
+    if (completed !== undefined) {
+      updates.push('completed = ?');
+      values.push(completed);
+    }
+    values.push(req.params.id);   // last ? is the id in WHERE
+
+    const [result] = await pool.query(
+      `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`,
+      values
     );
 
     if (result.affectedRows === 0) {
