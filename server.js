@@ -15,11 +15,19 @@ app.get('/', (req, res) => {
   res.json({ message: 'Task API is ready!', version: 'MySQL + MVC' });
 });
 
-// Every URL starting with /tasks goes to the task router
 app.use('/tasks', taskRoutes);
 
-// Central error handler — receives everything passed to next(err)
+// Unknown route → JSON 404 (must come AFTER all routes)
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
+});
+
+// Central error handler (4 parameters, always last)
 app.use((err, req, res, next) => {
+  // Broken JSON in the request body → client's mistake
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON in request body' });
+  }
   console.error('Error:', err.message);
   res.status(500).json({ error: 'Internal Server Error' });
 });
