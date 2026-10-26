@@ -1,8 +1,9 @@
 // server.js — entry point
-// Flow: request → routes → controller → model → MySQL
+// Flow: browser (public/) → routes → controller → model → MySQL
 
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const taskRoutes = require('./src/routes/taskRoutes');
 
@@ -11,10 +12,15 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Task API is ready!', version: 'MySQL + MVC' });
+// Frontend: files in /public are served directly (index.html at "/")
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API health check (moved from "/" because "/" now shows the page)
+app.get('/api', (req, res) => {
+  res.json({ message: 'Task API is ready!', version: 'MySQL + MVC + Frontend' });
 });
 
+// Every URL starting with /tasks goes to the task router
 app.use('/tasks', taskRoutes);
 
 // Unknown route → JSON 404 (must come AFTER all routes)
@@ -37,5 +43,6 @@ app.listen(PORT, (err) => {
     console.error(`Could not start server: ${err.message}`);
     process.exit(1);
   }
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Frontend:  http://localhost:${PORT}`);
+  console.log(`API check: http://localhost:${PORT}/api`);
 });

@@ -1,0 +1,147 @@
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --text: #1f2933;
+  --muted: #6b7785;
+  --border: #dde2e8;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --danger: #dc2626;
+  --success: #16a34a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+h1 { margin: 0; font-size: 1.8rem; }
+.subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+.status { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.status--checking { background: #e5e7eb; color: var(--muted); }
+.status--ok       { background: #dcfce7; color: var(--success); }
+.status--error    { background: #fee2e2; color: var(--danger); }
+
+/* Add form */
+.add-form { display: flex; gap: 8px; margin-bottom: 20px; }
+.add-form input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.add-form input:focus, .search:focus, .edit-input:focus {
+  outline: 2px solid var(--primary);
+  border-color: transparent;
+}
+
+/* Buttons */
+.btn { padding: 10px 16px; font-size: 0.95rem; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+.btn--primary { background: var(--primary); color: #fff; }
+.btn--primary:hover { background: var(--primary-dark); }
+.btn--ghost { background: transparent; border-color: var(--border); color: var(--text); }
+.btn--ghost:hover { background: #e9edf2; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.stats { display: flex; gap: 16px; color: var(--muted); font-size: 0.9rem; }
+.stats strong { color: var(--text); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.filter.is-active { background: var(--text); color: #fff; border-color: var(--text); }
+
+.search {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+/* Task list */
+.task-list { list-style: none; margin: 0; padding: 0; }
+.task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.task input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; }
+.task-body { flex: 1; min-width: 0; }
+.task-title { margin: 0; word-break: break-word; }
+.task.is-done .task-title { text-decoration: line-through; color: var(--muted); }
+.task-meta { margin: 2px 0 0; font-size: 0.75rem; color: var(--muted); }
+.task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.icon-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.icon-btn:hover { background: #eef1f5; color: var(--text); }
+.icon-btn.delete:hover { background: #fee2e2; color: var(--danger); }
+
+.edit-input { width: 100%; padding: 6px 8px; font-size: 1rem; border: 1px solid var(--border); border-radius: 6px; }
+
+.empty { text-align: center; color: var(--muted); padding: 24px 0; }
+.footnote { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 24px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: calc(100% - 32px);
+}
+.toast.is-error { background: var(--danger); }
+
+/* Phones */
+@media (max-width: 500px) {
+  .add-form { flex-direction: column; }
+  .task-actions .label { display: none; }
+}

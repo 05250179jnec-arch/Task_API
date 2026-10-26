@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+
+    <header class="header">
+      <div>
+        <h1>Task Manager</h1>
+        <p class="subtitle">Frontend → Express API → Aiven MySQL</p>
+      </div>
+      <span id="status" class="status status--checking">Checking…</span>
+    </header>
+
+    <!-- Add a new task (POST /tasks) -->
+    <form id="addForm" class="add-form">
+      <input id="titleInput" type="text" placeholder="What do you need to do?"
+             maxlength="255" autocomplete="off" required>
+      <button type="submit" class="btn btn--primary">Add task</button>
+    </form>
+
+    <!-- Counts + filters -->
+    <section class="toolbar">
+      <div class="stats">
+        <span><strong id="countAll">0</strong> total</span>
+        <span><strong id="countOpen">0</strong> pending</span>
+        <span><strong id="countDone">0</strong> done</span>
+      </div>
+      <div class="filters">
+        <button class="filter is-active" data-filter="all">All</button>
+        <button class="filter" data-filter="pending">Pending</button>
+        <button class="filter" data-filter="done">Done</button>
+        <button id="refreshBtn" class="btn btn--ghost" title="Reload from database">⟳ Refresh</button>
+      </div>
+    </section>
+
+    <input id="searchInput" class="search" type="search" placeholder="Search tasks…">
+
+    <!-- Task list (filled in by JavaScript) -->
+    <ul id="taskList" class="task-list"></ul>
+    <p id="emptyMsg" class="empty" hidden>No tasks here.</p>
+
+    <p class="footnote">
+      Changes made directly in MySQL Workbench appear here automatically within 10 seconds.
+    </p>
+  </main>
+
+  <!-- Small popup message -->
+  <div id="toast" class="toast" hidden></div>
+</body>
+</html>
