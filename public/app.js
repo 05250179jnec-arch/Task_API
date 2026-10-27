@@ -5,8 +5,8 @@
 const API = '/tasks';
 
 let tasks = [];            // latest copy of the tasks from the server
-let currentFilter = 'all'; // NEW: 'all' | 'pending' | 'done'
-let editingId = null;      // NEW: id of the task being edited (pauses redraws)
+let currentFilter = 'all'; // 'all' | 'pending' | 'done'
+let editingId = null;      // id of the task being edited (pauses redraws)
 
 // ---------- Elements ----------
 const taskList    = document.getElementById('taskList');
@@ -14,8 +14,8 @@ const emptyMsg    = document.getElementById('emptyMsg');
 const toastEl     = document.getElementById('toast');
 const addForm     = document.getElementById('addForm');
 const titleInput  = document.getElementById('titleInput');
-const searchInput = document.getElementById('searchInput'); // NEW
-const refreshBtn  = document.getElementById('refreshBtn');  // NEW
+const searchInput = document.getElementById('searchInput');
+const refreshBtn  = document.getElementById('refreshBtn');
 
 // ---------- Helper: one place for every API call ----------
 async function request(url, options = {}) {
@@ -34,6 +34,14 @@ async function request(url, options = {}) {
 }
 
 // ---------- CRUD functions ----------
+async function loadTasks() {
+  try {
+    tasks = await request(API);                         // GET /tasks
+    if (editingId === null) render();
+  } catch (err) {
+    showToast('Could not load tasks: ' + err.message, true);
+  }
+}
 
 async function addTask(title) {
   const task = await request(API, {                     // POST /tasks
@@ -53,7 +61,6 @@ async function toggleTask(id, completed) {
   replaceTask(updated);
 }
 
-// NEW: rename (PUT needs BOTH title and completed)
 async function renameTask(id, title) {
   const old = tasks.find(t => t.id === id);
   const updated = await request(`${API}/${id}`, {       // PUT /tasks/:id
@@ -78,9 +85,8 @@ function replaceTask(updated) {
 
 // ---------- Rendering ----------
 function render() {
-  const search = searchInput.value.trim().toLowerCase();       // NEW
+  const search = searchInput.value.trim().toLowerCase();
 
-  // NEW: only show tasks that match the filter AND the search
   const visible = tasks.filter(t => {
     const done = Boolean(t.completed);
     if (currentFilter === 'pending' && done) return false;
@@ -92,7 +98,6 @@ function render() {
   visible.forEach(t => taskList.appendChild(createTaskItem(t)));
   emptyMsg.hidden = visible.length > 0;
 
-  // Counts always use ALL tasks, not just the visible ones
   const doneCount = tasks.filter(t => t.completed).length;
   document.getElementById('countAll').textContent  = tasks.length;
   document.getElementById('countDone').textContent = doneCount;
@@ -129,7 +134,6 @@ function createTaskItem(task) {
   const actions = document.createElement('div');
   actions.className = 'task-actions';
 
-  // NEW: edit button
   const editBtn = document.createElement('button');
   editBtn.className = 'icon-btn';
   editBtn.innerHTML = '✎ <span class="label">Edit</span>';
@@ -149,7 +153,7 @@ function createTaskItem(task) {
   return li;
 }
 
-// NEW: inline edit — swap the title for a text box. Enter saves, Esc cancels.
+// Inline edit: swap the title for a text box. Enter saves, Esc cancels.
 function startEdit(li, task) {
   editingId = task.id;
   const body = li.querySelector('.task-body');
@@ -162,7 +166,7 @@ function startEdit(li, task) {
   input.focus();
   input.select();
 
-  let finished = false;               // makes sure we only save once
+  let finished = false;
   const finish = async (save) => {
     if (finished) return;
     finished = true;
@@ -177,7 +181,7 @@ function startEdit(li, task) {
         render();
       }
     } else {
-      render();                       // cancelled or unchanged → just redraw
+      render();
     }
   };
 
@@ -185,7 +189,7 @@ function startEdit(li, task) {
     if (e.key === 'Enter') finish(true);
     if (e.key === 'Escape') finish(false);
   });
-  input.addEventListener('blur', () => finish(true));   // clicking away also saves
+  input.addEventListener('blur', () => finish(true));
 }
 
 // ---------- Small helpers ----------
@@ -224,20 +228,17 @@ addForm.addEventListener('submit', async e => {
   }
 });
 
-// NEW: filter buttons
 document.querySelectorAll('.filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelector('.filter.is-active').classList.remove('is-active');
     btn.classList.add('is-active');
-    currentFilter = btn.dataset.filter;   // reads data-filter="..." from the HTML
+    currentFilter = btn.dataset.filter;
     render();
   });
 });
 
-// NEW: search as you type
 searchInput.addEventListener('input', render);
 
-// NEW: manual refresh
 refreshBtn.addEventListener('click', () =>
   loadTasks().then(() => showToast('Reloaded from database'))
 );
@@ -245,5 +246,5 @@ refreshBtn.addEventListener('click', () =>
 // ---------- Start ----------
 loadTasks();
 
-// NEW: re-read the database every 10 s so edits made in MySQL Workbench show up here
+// Re-read the database every 10 s so edits made in MySQL Workbench show up here
 setInterval(loadTasks, 10000);
