@@ -4,53 +4,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Task Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
+  <div class="app">
 
-    <header class="header">
-      <h1>Task Manager</h1>
-      <span id="status" class="status status--error" hidden>● API offline</span>
-    </header>
-    <!-- Add a new task (POST /tasks) -->
-    <form id="addForm" class="add-form">
-      <input id="titleInput" type="text" placeholder="What do you need to do?"
-             maxlength="255" autocomplete="off" required>
-      <button type="submit" class="btn btn--primary">Add task</button>
-    </form>
-
-    <!-- Counts + filters -->
-    <section class="toolbar">
-      <div class="stats">
-        <span><strong id="countAll">0</strong> total</span>
-        <span><strong id="countOpen">0</strong> pending</span>
-        <span><strong id="countDone">0</strong> done</span>
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">✓</div>
+        <div>
+          <h1>Task Manager</h1>
+          <p class="brand-sub">Stay on track</p>
+        </div>
       </div>
-      <div class="filters">
-        <button class="filter is-active" data-filter="all">All</button>
-        <button class="filter" data-filter="pending">Pending</button>
-        <button class="filter" data-filter="done">Done</button>
-        <button id="refreshBtn" class="btn btn--ghost" title="Reload from database">⟳ Refresh</button>
+
+      <!-- Clock card -->
+      <section class="card clock-card">
+        <p id="greeting" class="greeting"></p>
+        <p id="clockTime" class="clock-time">--:--</p>
+        <p id="clockDate" class="clock-date"></p>
+      </section>
+
+      <!-- Progress ring -->
+      <section class="card ring-card">
+        <div class="ring" title="Tasks completed">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle id="ringFg" class="ring-fg" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="ring-label">
+            <strong id="progressPct">0%</strong>
+            <span>done</span>
+          </div>
+        </div>
+        <p id="progressText" class="ring-text">Let's get started</p>
+      </section>
+
+      <!-- Views -->
+      <nav class="nav">
+        <p class="nav-title">Views</p>
+        <button class="filter is-active" data-filter="all">
+          <span>📋 All tasks</span><strong id="countAll">0</strong>
+        </button>
+        <button class="filter" data-filter="pending">
+          <span>⏳ Pending</span><strong id="countOpen">0</strong>
+        </button>
+        <button class="filter" data-filter="done">
+          <span>✅ Completed</span><strong id="countDone">0</strong>
+        </button>
+      </nav>
+
+      <!-- Tags -->
+      <nav class="nav">
+        <p class="nav-title">Tags</p>
+        <div id="tagList" class="tag-cloud"></div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button id="themeBtn" class="btn btn--ghost btn--block">🌙 Dark mode</button>
       </div>
-    </section>
+    </aside>
 
-    <input id="searchInput" class="search" type="search" placeholder="Search tasks…">
+    <!-- ===================== MAIN ===================== -->
+    <main class="main">
 
-    <!-- Task list (filled in by JavaScript) -->
-    <ul id="taskList" class="task-list"></ul>
-    <p id="emptyMsg" class="empty" hidden>No tasks here.</p>
+      <!-- Top bar -->
+      <header class="topbar">
+        <div>
+          <h2 id="viewTitle">All tasks</h2>
+          <p id="viewSub" class="topbar-sub">Small steps every day add up to big results. 🚀</p>
+        </div>
+        <div class="topbar-actions">
+          <input id="searchInput" class="search" type="search" placeholder="🔍  Search tasks or #tags…   ( / )">
+          <button id="refreshBtn" class="btn btn--ghost btn--icon" title="Reload from database">⟳</button>
+          <button id="clearDoneBtn" class="btn btn--ghost" title="Delete all completed tasks">Clear done</button>
+        </div>
+      </header>
 
-    <p class="footnote">
-      Changes made directly in MySQL Workbench appear here automatically within 10 seconds.
-    </p>
-  </main>
+      <!-- Progress bar with steps -->
+      <section class="card progress-card">
+        <div class="progress-line"><div id="progressBar" class="progress-fill"></div></div>
+        <div class="progress-steps">
+          <span data-step="0">Start</span>
+          <span data-step="25">25%</span>
+          <span data-step="50">Halfway</span>
+          <span data-step="75">75%</span>
+          <span data-step="100">Done 🎉</span>
+        </div>
+      </section>
+
+      <!-- Add a new task (POST /tasks) -->
+      <form id="addForm" class="add-form">
+        <input id="titleInput" type="text" placeholder="What do you need to do?  Try “Lab report #syd204”   ( N )"
+               maxlength="255" autocomplete="off" required>
+        <button type="submit" class="btn btn--primary">＋ Add task</button>
+      </form>
+
+      <!-- Board: two columns -->
+      <section id="board" class="board">
+        <div class="column" id="pendingCol">
+          <div class="column-head">
+            <span class="dot dot--pending"></span> To do
+            <span id="pendingCount" class="column-count">0</span>
+          </div>
+          <ul id="pendingList" class="task-list"></ul>
+          <p id="pendingEmpty" class="empty" hidden></p>
+        </div>
+
+        <div class="column" id="doneCol">
+          <div class="column-head">
+            <span class="dot dot--done"></span> Completed
+            <span id="doneCount" class="column-count">0</span>
+          </div>
+          <ul id="doneList" class="task-list"></ul>
+          <p id="doneEmpty" class="empty" hidden></p>
+        </div>
+      </section>
+
+      
+    </main>
+  </div>
 
   <!-- Small popup message -->
   <div id="toast" class="toast" hidden></div>
-    <div id="toast" class="toast" hidden></div>
 
   <script src="app.js"></script>
-</body>
 </body>
 </html>
