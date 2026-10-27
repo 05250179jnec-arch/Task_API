@@ -11,7 +11,6 @@ let editingId = null;      // NEW: id of the task being edited (pauses redraws)
 // ---------- Elements ----------
 const taskList    = document.getElementById('taskList');
 const emptyMsg    = document.getElementById('emptyMsg');
-const statusEl    = document.getElementById('status');
 const toastEl     = document.getElementById('toast');
 const addForm     = document.getElementById('addForm');
 const titleInput  = document.getElementById('titleInput');
@@ -35,16 +34,6 @@ async function request(url, options = {}) {
 }
 
 // ---------- CRUD functions ----------
-async function loadTasks() {
-  try {
-    tasks = await request(API);                         // GET /tasks
-    setStatus(true);
-    if (editingId === null) render();                   // NEW: don't wipe an open edit box
-  } catch (err) {
-    setStatus(false);
-    showToast('Could not load tasks: ' + err.message, true);
-  }
-}
 
 async function addTask(title) {
   const task = await request(API, {                     // POST /tasks
@@ -205,11 +194,6 @@ function formatDate(value) {
   return new Date(value).toLocaleString(undefined, {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
-}
-
-function setStatus(ok) {
-  statusEl.textContent = ok ? '● Connected' : '● API offline';
-  statusEl.className = 'status ' + (ok ? 'status--ok' : 'status--error');
 }
 
 let toastTimer;

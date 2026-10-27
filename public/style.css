@@ -30,12 +30,7 @@ body {
   margin-bottom: 24px;
 }
 h1 { margin: 0; font-size: 1.8rem; }
-.subtitle { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
 
-.status { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-.status--checking { background: #e5e7eb; color: var(--muted); }
-.status--ok       { background: #dcfce7; color: var(--success); }
-.status--error    { background: #fee2e2; color: var(--danger); }
 
 /* Add form */
 .add-form { display: flex; gap: 8px; margin-bottom: 20px; }
